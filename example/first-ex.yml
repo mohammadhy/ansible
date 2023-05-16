@@ -1,0 +1,45 @@
+---
+  - name: This Play for using var_files & meta ...
+    hosts: test2
+    become: yes
+    vars_files: variable.yml
+    gather_facts: no
+    vars:
+      - username: "{{ user_name }}"
+      - email: "{{ email_address }}"
+      - package:
+          pkg1: 'net-tools'
+          pkg2: 'bind9'
+    tasks:
+      - name: Test To show setup var_files
+        debug:
+          msg: This Is User {{ username  }} & his email is {{ email }}
+        tags: 
+        - test-var-files
+        - all
+      - name: check Package instaled or not
+        shell: "which ifconfig"
+        ignore_errors: yes
+        register: result
+
+      - name: check information result
+        debug: 
+          var: result
+
+      - name: Install package {{ package['pkg1'] }}
+        apt: 
+          name: "{{ package['pkg1'] }}"
+          state: present
+        tags:
+        - all
+        - net-tools
+
+      - name: Install package {{ package['pkg2'] }}
+        apt:
+          name: "{{ package['pkg2'] }}"
+          state: present
+        tags:
+        - all
+        - bind
+
+

@@ -1,0 +1,24 @@
+---
+# tasks file for nginx-conf
+- name: install nginx
+  apt:
+    update_cache: yes
+    name: nginx
+    state: present
+- name: copy configure file
+  copy:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+- name: Create Directory /var/www
+  file:
+    path: /var/www
+    state: directory
+- name: Copy test.index to /var/www
+  copy:
+    src: test.index
+    dest: /var/www/
+  notify: restart nginx
+
+
+
+
