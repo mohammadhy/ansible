@@ -1,0 +1,11 @@
+- name: Add line to file if not matching regex
+  hosts: localhost
+  tasks:
+    - name: Add line if not matching regex
+      ansible.builtin.lineinfile:
+        path: /home/user02/Documents/b
+        line: "MONGO_DB_URLS=11111"
+        regexp: "^MONGO_DB_URLS="
+        state: present
+        backrefs: yes
+
