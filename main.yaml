@@ -3,13 +3,10 @@
   gather_facts: yes
   vars:
     api_vars:
-      - tour-wizard-api
-      - customers-api
-      - service-request-api
-      - trip-request-api
-      - payment-api
-      - last-reminder-laravel
-      - notifier-api
+      - api
+      - api2
+      - api3
+      - api4
   tasks:
     - name: Check Api Exist or Not
       assert:
