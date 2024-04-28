@@ -1,0 +1,50 @@
+- name: Check The Api Exist Or Not
+  hosts: localhost
+  gather_facts: yes
+  vars:
+    api_vars:
+      - tour-wizard-api
+      - customers-api
+      - service-request-api
+      - trip-request-api
+      - payment-api
+      - last-reminder-laravel
+      - notifier-api
+  tasks:
+    - name: Check Api Exist or Not
+      assert:
+        that: api in api_vars
+        fail_msg: "Api Does Not Exist In APIs"
+      vars:
+        api: "{{ api }}"
+    - name: Check Path Exist Or Not
+      stat:
+        path: "~/code/{{ api }}"
+      register: info
+    - name: Fail Directory Exist
+      fail:
+        msg: "Directory '{{ api }}' Does Not Exist"
+      when: not info.stat.exists
+    - name: Git Pull 
+      git:
+        repo: "https://gittab.lastsecondtours.com/devops/deploy-scripts.git"
+        dest: "~/code/{{ api }}"
+        update: yes
+      when: info.stat.exists
+
+    - name: Deploy PHP- Api
+      shell: |
+         docker exec --workdir /var/www/vhosts/{{ api }} nginx-php sh -c "nginx -t" && docker restart nginx-php
+      vars:
+        api: "{{ api }}"
+      when: api == 'last-reminder-laravel'
+
+    - name: Deploy PHP-8 Api
+      shell: |
+        docker exec --workdir /usr/share/nginx nginx-php sh -c "nginx -t"  && docker restart nginx-php
+      vars:
+        api: "{{ api }}"
+      when: api != 'last-reminder-laravel'
+
+
+        
