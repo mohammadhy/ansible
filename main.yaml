@@ -1,5 +1,6 @@
 - name: Check The Api Exist Or Not
-  hosts: localhost
+  hosts: 
+    - last2    
   gather_facts: yes
   vars:
     api_vars:
@@ -7,41 +8,92 @@
       - api2
       - api3
       - api4
+      - api5
+      - api6
+
   tasks:
     - name: Check Api Exist or Not
+      become: true
+      become_user: "{{ default_user }}"
       assert:
         that: api in api_vars
         fail_msg: "Api Does Not Exist In APIs"
       vars:
         api: "{{ api }}"
+      tags:
+        - check-api
+        - git
+
     - name: Check Path Exist Or Not
+      become: true
+      become_user: "{{ default_user }}"
       stat:
-        path: "~/code/{{ api }}"
+        path: "{{ default_home }}/code/{{ api }}"
       register: info
+      tags:
+        - git
+
     - name: Fail Directory Exist
+      become: true
+      become_user: "{{ default_user }}"
       fail:
         msg: "Directory '{{ api }}' Does Not Exist"
       when: not info.stat.exists
+      tags:
+        - git
+
     - name: Git Pull 
+      become: true
+      become_user: "{{ default_user }}"
       git:
-        repo: "https://gittab.lastsecondtours.com/devops/deploy-scripts.git"
+        repo: "<Your Repository>/{{ api }}"
         dest: "~/code/{{ api }}"
         update: yes
       when: info.stat.exists
+      diff_mode: true
+      tags:
+        - git
 
     - name: Deploy PHP- Api
+      become: true
+      become_user: "{{ default_user }}"
       shell: |
-         docker exec --workdir /var/www/vhosts/{{ api }} nginx-php sh -c "nginx -t" && docker restart nginx-php
+        docker exec --user {{ default_user }} --workdir /var/www/vhosts/{{ api }} nginx sh -c "nginx -t "
       vars:
         api: "{{ api }}"
-      when: api == 'last-reminder-laravel'
+      when: api == 'api7'
+      tags:
+        - clear-cache
+        - nginx-php
+    
+    - name: Restart nginx
+      shell: |
+        docker restart nginx-php
+      vars:
+        api: "{{ api }}" 
+      when: api == 'api7'
+      tags:
+        - nginx-php
+        - restart
 
     - name: Deploy PHP-8 Api
+      become: true
+      become_user: "{{ default_user }}"
       shell: |
-        docker exec --workdir /usr/share/nginx nginx-php sh -c "nginx -t"  && docker restart nginx-php
+        docker exec --user {{ default_user }} --workdir /var/www/vhosts/{{ api }} apache sh -c "apache2 ensmod"
       vars:
         api: "{{ api }}"
-      when: api != 'last-reminder-laravel'
+      when: api != 'api7'
+      tags:
+        - apache
+        - clear-cache
 
-
-        
+    - name: Restart nginx-php8
+      shell: |
+        docker restart nginx-php8
+      vars:
+        api: "{{ api }}" 
+      when: api != 'api7'
+      tags:
+        - apache
+        - restart
